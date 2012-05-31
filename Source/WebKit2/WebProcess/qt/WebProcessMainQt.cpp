@@ -34,7 +34,7 @@
 #include <QStringList>
 #include <QUrl>
 #include <WebCore/RunLoop.h>
-#include <runtime/InitializeThreading.h>
+#include <WebCore/ScriptController.h>
 #include <wtf/MainThread.h>
 
 #if USE(ACCELERATED_COMPOSITING)
@@ -145,8 +145,7 @@ Q_DECL_EXPORT int WebProcessMainQt(QGuiApplication* app)
 
     srandom(time(0));
 
-    JSC::initializeThreading();
-    WTF::initializeMainThread();
+    ScriptController::initializeThreading();
     RunLoop::initializeMainRunLoop();
 
     // Create the connection.

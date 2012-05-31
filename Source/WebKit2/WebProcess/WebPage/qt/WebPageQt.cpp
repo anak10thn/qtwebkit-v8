@@ -33,6 +33,8 @@
 #include "WebPageProxyMessages.h"
 #include "WebProcess.h"
 #include <WebCore/DOMWrapperWorld.h>
+#include <WebCore/Document.h>
+#include <WebCore/Element.h>
 #include <WebCore/FocusController.h>
 #include <WebCore/Frame.h>
 #include <WebCore/KeyboardEvent.h>

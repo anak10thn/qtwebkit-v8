@@ -342,7 +342,7 @@ bool V8DOMWindowShell::initContextIfNeeded()
 
     // FIXME: This is wrong. We should actually do this for the proper world once
     // we do isolated worlds the WebCore way.
-    m_frame->loader()->dispatchDidClearWindowObjectInWorld(0);
+    m_frame->loader()->dispatchDidClearWindowObjectInWorld(mainThreadNormalWorld());
 
     return true;
 }

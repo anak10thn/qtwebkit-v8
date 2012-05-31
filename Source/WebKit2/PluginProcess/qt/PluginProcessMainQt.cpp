@@ -36,7 +36,7 @@
 #include <QStringList>
 #include <QtGlobal>
 #include <WebCore/RunLoop.h>
-#include <runtime/InitializeThreading.h>
+#include <WebCore/ScriptController.h>
 #include <wtf/MainThread.h>
 #include <wtf/Threading.h>
 
@@ -79,8 +79,7 @@ Q_DECL_EXPORT int PluginProcessMain(int argc, char** argv)
     if (!initializeGtk())
         return EXIT_FAILURE;
 
-    JSC::initializeThreading();
-    WTF::initializeMainThread();
+    ScriptController::initializeThreading();
 
     if (argc <= 1)
         return EXIT_FAILURE;

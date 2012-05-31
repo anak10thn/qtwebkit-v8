@@ -37,10 +37,13 @@
 #include <WebCore/HTTPHeaderMap.h>
 #include <WebCore/IntRect.h>
 #include <WebCore/KURL.h>
-#include <runtime/JSObject.h>
-#include <runtime/ScopeChain.h>
 #include <utility>
 #include <wtf/text/CString.h>
+
+#if USE(JSC)
+#include <runtime/JSObject.h>
+#include <runtime/ScopeChain.h>
+#endif
 
 using namespace WebCore;
 using namespace std;

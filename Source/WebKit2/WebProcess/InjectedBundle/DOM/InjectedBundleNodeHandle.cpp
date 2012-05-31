@@ -38,10 +38,15 @@
 #include <WebCore/HTMLTableCellElement.h>
 #include <WebCore/HTMLTextAreaElement.h>
 #include <WebCore/IntRect.h>
-#include <WebCore/JSNode.h>
 #include <WebCore/Node.h>
 #include <wtf/HashMap.h>
 #include <wtf/text/WTFString.h>
+
+#if USE(JSC)
+#include <WebCore/JSNode.h>
+#elif USE(V8)
+#include <WebCore/V8Node.h>
+#endif
 
 using namespace WebCore;
 using namespace HTMLNames;
@@ -58,7 +63,11 @@ static DOMHandleCache& domHandleCache()
 
 PassRefPtr<InjectedBundleNodeHandle> InjectedBundleNodeHandle::getOrCreate(JSContextRef, JSObjectRef object)
 {
+#if USE(JSC)
     Node* node = toNode(toJS(object));
+#elif USE(V8)
+    Node* node = V8Node::toNative(toV8(object));
+#endif
     return getOrCreate(node);
 }
 

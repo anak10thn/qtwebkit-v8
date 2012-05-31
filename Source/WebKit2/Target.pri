@@ -11,7 +11,9 @@ load(features)
 
 include(WebKit2.pri)
 
-WEBKIT += wtf javascriptcore webcore
+WEBKIT += wtf webcore
+v8: WEBKIT += v8jscapishim
+else: WEBKIT += javascriptcore
 QT += qml quick quick-private
 
 CONFIG += staticlib

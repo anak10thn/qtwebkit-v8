@@ -91,6 +91,13 @@ inline WTF::String toWTFString(const WKRetainPtr<WKStringRef>& string)
     return toWTFString(string.get());
 }
 
+inline JSObjectRef jsValueAsObject(JSValueRef value)
+{
+    // This is necessary with v8 where JSValueRef and JSObjectRef
+    // are smart pointer types.
+    return JSObjectRef(value);
+}
+
 } // namespace WTR
 
 #endif // StringFunctions_h

@@ -40,7 +40,6 @@
 #include <WebCore/RunLoop.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <runtime/InitializeThreading.h>
 #include <string>
 #include <sys/resource.h>
 #include <sys/socket.h>

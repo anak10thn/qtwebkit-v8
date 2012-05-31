@@ -234,6 +234,12 @@ private:
 
     virtual PassRefPtr<WebCore::FrameNetworkingContext> createNetworkingContext() OVERRIDE;
 
+#if USE(V8)
+    virtual void didCreateScriptContext(v8::Handle<v8::Context>, int extensionGroup, int worldId);
+    virtual void willReleaseScriptContext(v8::Handle<v8::Context>, int worldId);
+    virtual bool allowScriptExtension(const String& extensionName, int extensionGroup, int worldId);
+#endif
+
     WebFrame* m_frame;
     RefPtr<PluginView> m_pluginView;
     bool m_hasSentResponseToPluginView;

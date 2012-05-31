@@ -26,7 +26,7 @@
 #include "config.h"
 #include "JSWrapper.h"
 
-#include <JavaScriptCore/JSContextRefPrivate.h>
+#include <JavaScriptCore/JavaScript.h>
 
 namespace WTR {
 

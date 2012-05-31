@@ -43,15 +43,13 @@
 #include "WebPreferencesStore.h"
 #include "WebProcess.h"
 #include <JavaScriptCore/APICast.h>
-#include <JavaScriptCore/JSLock.h>
+#include <WebCore/Document.h>
 #include <WebCore/Frame.h>
 #include <WebCore/FrameView.h>
-#include <WebCore/GCController.h>
 #include <WebCore/GeolocationClient.h>
 #include <WebCore/GeolocationClientMock.h>
 #include <WebCore/GeolocationController.h>
 #include <WebCore/GeolocationPosition.h>
-#include <WebCore/JSDOMWindow.h>
 #include <WebCore/Page.h>
 #include <WebCore/PageGroup.h>
 #include <WebCore/PageVisibilityState.h>
@@ -64,6 +62,15 @@
 #include <WebCore/UserGestureIndicator.h>
 #include <wtf/OwnArrayPtr.h>
 #include <wtf/PassOwnArrayPtr.h>
+
+#if USE(JSC)
+#include <JavaScriptCore/JSLock.h>
+#include <WebCore/GCController.h>
+#include <WebCore/JSDOMWindow.h>
+#elif USE(V8)
+#include <WebCore/V8DOMWindow.h>
+#include <WebCore/V8GCController.h>
+#endif
 
 using namespace WebCore;
 using namespace JSC;
@@ -392,18 +399,32 @@ void InjectedBundle::removeAllUserContent(WebPageGroupProxy* pageGroup)
 
 void InjectedBundle::garbageCollectJavaScriptObjects()
 {
+#if USE(JSC)
     gcController().garbageCollectNow();
+#elif USE(V8)
+    v8::V8::LowMemoryNotification();
+#endif
 }
 
 void InjectedBundle::garbageCollectJavaScriptObjectsOnAlternateThreadForDebugging(bool waitUntilDone)
 {
+#if USE(JSC)
     gcController().garbageCollectOnAlternateThreadForDebugging(waitUntilDone);
+#elif USE(V8)
+    // FIXME: how to mimic this with v8?
+    garbageCollectJavaScriptObjects();
+#endif
 }
 
 size_t InjectedBundle::javaScriptObjectsCount()
 {
+#if USE(JSC)
     JSLock lock(SilenceAssertionsOnly);
     return JSDOMWindow::commonJSGlobalData()->heap.objectCount();
+#elif USE(V8)
+    // FIXME: how to mimic this with v8?
+    return 1;
+#endif
 }
 
 void InjectedBundle::reportException(JSContextRef context, JSValueRef exception)
@@ -411,6 +432,7 @@ void InjectedBundle::reportException(JSContextRef context, JSValueRef exception)
     if (!context || !exception)
         return;
 
+#if USE(JSC)
     JSLock lock(JSC::SilenceAssertionsOnly);
     JSC::ExecState* execState = toJS(context);
 
@@ -419,6 +441,29 @@ void InjectedBundle::reportException(JSContextRef context, JSValueRef exception)
         return;
 
     WebCore::reportException(execState, toJS(execState, exception));
+#elif USE(V8)
+    v8::HandleScope handleScope;
+    v8::Handle<v8::Object> globalObject = toV8(context)->Global();
+    if (!V8DOMWindow::HasInstance(globalObject))
+        return;
+    DOMWindow* domWindow = V8DOMWindow::toNative(globalObject);
+    ASSERT(domWindow);
+    ScriptExecutionContext* executionContext = domWindow->scriptExecutionContext();
+    if (!executionContext)
+        return;
+    v8::Handle<v8::Value> v8Exception = toV8(exception);
+    String errorMessage;
+    if (v8Exception->IsString()) {
+        v8::Handle<v8::String> exceptionString = v8Exception->ToString();
+        UChar* characters;
+        int length = exceptionString->Length();
+        errorMessage = String::createUninitialized(length, characters);
+        exceptionString->Write(static_cast<uint16_t*>(characters), 0, length);
+    }
+
+    // FIXME: this lacks lineinfo and source URL.
+    executionContext->reportException(errorMessage, 0, String(), 0);
+#endif
 }
 
 void InjectedBundle::didCreatePage(WebPage* page)

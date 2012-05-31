@@ -112,8 +112,11 @@
 #include <WebCore/SubstituteData.h>
 #include <WebCore/TextIterator.h>
 #include <WebCore/markup.h>
+
+#if USE(JSC)
 #include <runtime/JSLock.h>
 #include <runtime/JSValue.h>
+#endif
 
 #include <WebCore/Range.h>
 #include <WebCore/VisiblePosition.h>
@@ -1793,11 +1796,24 @@ void WebPage::runJavaScriptInMainFrame(const String& script, uint64_t callbackID
     RefPtr<SerializedScriptValue> serializedResultValue;
     CoreIPC::DataReference dataReference;
 
+#if USE(JSC)
     JSLock lock(SilenceAssertionsOnly);
     if (JSValue resultValue = m_mainFrame->coreFrame()->script()->executeScript(script, true).jsValue()) {
         if ((serializedResultValue = SerializedScriptValue::create(m_mainFrame->jsContext(), toRef(m_mainFrame->coreFrame()->script()->globalObject(mainThreadNormalWorld())->globalExec(), resultValue), 0)))
             dataReference = serializedResultValue->data();
     }
+#elif USE(V8)
+    ScriptController* controller = m_mainFrame->coreFrame()->script();
+    ScriptValue result = controller->executeScript(script, true);
+    ScriptState* state = ScriptState::forContext(controller->proxy()->context(m_mainFrame->coreFrame()));
+    serializedResultValue = result.serialize(state);
+    String wireString;
+    if (!state->hadException()) {
+        wireString = serializedResultValue->toWireString();
+        dataReference = wireString.is8Bit() ? CoreIPC::DataReference(reinterpret_cast<const uint8_t*>(wireString.characters8()), wireString.length())
+                                            : CoreIPC::DataReference(reinterpret_cast<const uint8_t*>(wireString.characters16()), wireString.length() * 2);
+    }
+#endif
 
     send(Messages::WebPageProxy::ScriptValueCallback(dataReference, callbackID));
 }

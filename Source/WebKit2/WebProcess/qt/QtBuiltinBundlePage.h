@@ -27,9 +27,9 @@
 #ifndef QtBuiltinBundlePage_h
 #define QtBuiltinBundlePage_h
 
-#include "JSObjectRef.h"
 #include "WKBundlePage.h"
 #include "WKBundleScriptWorld.h"
+#include <JavaScriptCore/JSObjectRef.h>
 
 namespace WebKit {
 

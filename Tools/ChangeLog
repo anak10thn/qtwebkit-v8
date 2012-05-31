@@ -1,5 +1,37 @@
 2012-05-31  Balazs Kelemen  <kbalazs@webkit.org>
 
+        [Qt] Make it possible to use WebKit2 with v8
+        https://bugs.webkit.org/show_bug.cgi?id=84457
+
+        Reviewed by NOBODY (OOPS!).
+
+        If using v8, use V8JSCAPIShim in WebKitTestRunner. This is mainly
+        build system change. The idiom of const_cast-ing a JSValueRef to
+        JSObjectRef does not work with the shim (where these are smart pointers)
+        so I added a helper for that.
+
+        * Scripts/build-webkit:
+        * WebKitTestRunner/DerivedSources.pri:
+        * WebKitTestRunner/InjectedBundle/Bindings/JSWrapper.cpp:
+        * WebKitTestRunner/InjectedBundle/EventSendingController.cpp:
+        (WTR::parseModifierArray):
+        * WebKitTestRunner/InjectedBundle/LayoutTestController.cpp:
+        (WTR::propertyObject):
+        (WTR::getElementById):
+        (WTR::LayoutTestController::computedStyleIncludingVisitedInfo):
+        (WTR::LayoutTestController::counterValueForElementById):
+        (WTR::LayoutTestController::markerTextForListItem):
+        (WTR::LayoutTestController::setValueForUser):
+        * WebKitTestRunner/InjectedBundle/Target.pri:
+        * WebKitTestRunner/StringFunctions.h:
+        (WTR::jsValueAsObject):
+        (WTR):
+        * WebKitTestRunner/Target.pri:
+        * qmake/mkspecs/features/default_post.prf:
+        * qmake/mkspecs/features/features.prf:
+
+2012-05-31  Balazs Kelemen  <kbalazs@webkit.org>
+
         [Qt] Implement a shim layer to wrap v8 behind the JavaScriptCore API
         https://bugs.webkit.org/show_bug.cgi?id=87872
 

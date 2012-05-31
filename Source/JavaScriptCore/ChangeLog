@@ -1,3 +1,13 @@
+2012-05-31  Balazs Kelemen  <kbalazs@webkit.org>
+
+        [Qt] Make it possible to use WebKit2 with v8
+        https://bugs.webkit.org/show_bug.cgi?id=84457
+
+        Reviewed by NOBODY (OOPS!).
+
+        * JavaScriptCore.pri: Build fix for the v8 case:
+        don't add ForwardingHeaders to the include path.
+
 2012-05-29  Filip Pizlo  <fpizlo@apple.com>
 
         DFG CFA should infer types and values of captured variables

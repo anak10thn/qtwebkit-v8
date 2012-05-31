@@ -27,10 +27,12 @@
 #define WebSerializedScriptValue_h
 
 #include "APIObject.h"
-
 #include "DataReference.h"
+#include <JavaScriptCore/APICast.h>
+#include <JavaScriptCore/JavaScript.h>
 #include <WebCore/SerializedScriptValue.h>
 #include <wtf/RefPtr.h>
+#include <wtf/text/WTFString.h>
 
 namespace WebKit {
 
@@ -45,7 +47,11 @@ public:
     
     static PassRefPtr<WebSerializedScriptValue> create(JSContextRef context, JSValueRef value, JSValueRef* exception)
     {
+#if USE(JSC)
         RefPtr<WebCore::SerializedScriptValue> serializedValue = WebCore::SerializedScriptValue::create(context, value, exception);
+#elif USE(V8)
+        RefPtr<WebCore::SerializedScriptValue> serializedValue = WebCore::SerializedScriptValue::create(toV8(value));
+#endif
         if (!serializedValue)
             return 0;
         return adoptRef(new WebSerializedScriptValue(serializedValue.get()));
@@ -53,15 +59,45 @@ public:
     
     static PassRefPtr<WebSerializedScriptValue> adopt(Vector<uint8_t>& buffer)
     {
+#if USE(JSC)
         return adoptRef(new WebSerializedScriptValue(WebCore::SerializedScriptValue::adopt(buffer)));
+#elif USE(V8)
+        String wireString(buffer.data(), buffer.size());
+        return adoptRef(new WebSerializedScriptValue(WebCore::SerializedScriptValue::createFromWire(wireString)));
+#endif
     }
     
     JSValueRef deserialize(JSContextRef context, JSValueRef* exception)
     {
+#if USE(V8)
+        return toRef(m_serializedScriptValue->deserialize());
+#else
         return m_serializedScriptValue->deserialize(context, exception);
+#endif
     }
 
-    CoreIPC::DataReference dataReference() const { return m_serializedScriptValue->data(); }
+    CoreIPC::DataReference dataReference() const
+    {
+#if USE(V8)
+        if (!m_buffer.isEmpty())
+            return m_buffer;
+
+        String wireString = m_serializedScriptValue->toWireString();
+        unsigned lengthInBytes = wireString.length();
+        const uint8_t* characters;
+        if (wireString.is8Bit())
+            characters = static_cast<const uint8_t*>(wireString.characters8());
+        else {
+            lengthInBytes *= 2;
+            characters = reinterpret_cast<const uint8_t*>(wireString.characters16());
+        }
+        m_buffer = Vector<uint8_t>(lengthInBytes);
+        memcpy(m_buffer.data(), characters, lengthInBytes);
+        return m_buffer;
+#else
+        return m_serializedScriptValue->data();
+#endif
+    }
 
     void* internalRepresentation() { return m_serializedScriptValue.get(); }
 
@@ -74,6 +110,9 @@ private:
     virtual Type type() const { return APIType; }
     
     RefPtr<WebCore::SerializedScriptValue> m_serializedScriptValue;
+#if USE(V8)
+    mutable Vector<uint8_t> m_buffer;
+#endif
 };
     
 }

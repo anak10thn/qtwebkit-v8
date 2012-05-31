@@ -34,8 +34,8 @@
 #include "WKString.h"
 #include "WKStringPrivate.h"
 #include "WKStringQt.h"
-#include <JavaScript.h>
 #include <JavaScriptCore/JSRetainPtr.h>
+#include <JavaScriptCore/JavaScript.h>
 
 namespace WebKit {
 
@@ -158,8 +158,8 @@ void QtBuiltinBundlePage::didReceiveMessageToNavigatorQtObject(WKStringRef conte
     if (!JSObjectIsFunction(context, onmessageFunction))
         return;
 
-    JSObjectRef wrappedMessage = createWrappedMessage(context, contents);
-    JSObjectCallAsFunction(context, onmessageFunction, 0, 1, &wrappedMessage, 0);
+    JSValueRef argList[] = { createWrappedMessage(context, contents) };
+    JSObjectCallAsFunction(context, onmessageFunction, 0, 1, argList, 0);
 }
 
 void QtBuiltinBundlePage::setNavigatorQtObjectEnabled(bool enabled)

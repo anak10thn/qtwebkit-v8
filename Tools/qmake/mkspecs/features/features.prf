@@ -96,13 +96,16 @@ haveQt(5) {
     no_webkit2 {
         DEFINES += PLUGIN_ARCHITECTURE_UNSUPPORTED=1
     } else {
-        contains(QT_CONFIG, xcb-xlib) {
+        !v8:contains(QT_CONFIG, xcb-xlib) {
             CONFIG += plugin_backend_xlib
             DEFINES += PLUGIN_ARCHITECTURE_X11=1 \
                        PLUGIN_ARCHITECTURE_UNSUPPORTED=0 \
                        ENABLE_PLUGIN_PROCESS=1
         } else {
             DEFINES += PLUGIN_ARCHITECTURE_UNSUPPORTED=1
+
+            #FIXME: we should not disable it for WebCore
+            DEFINES += ENABLE_NETSCAPE_PLUGIN_API=0
         }
     }
 }

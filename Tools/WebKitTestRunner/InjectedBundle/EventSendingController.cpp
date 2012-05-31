@@ -69,7 +69,7 @@ static WKEventModifiers parseModifierArray(JSContextRef context, JSValueRef arra
         return 0;
     if (!JSValueIsObject(context, arrayValue))
         return 0;
-    JSObjectRef array = const_cast<JSObjectRef>(arrayValue);
+    JSObjectRef array = jsValueAsObject(arrayValue);
     unsigned length = arrayLength(context, array);
     WKEventModifiers modifiers = 0;
     for (unsigned i = 0; i < length; i++) {

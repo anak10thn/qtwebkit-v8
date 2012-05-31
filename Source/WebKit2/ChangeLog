@@ -1,5 +1,94 @@
 2012-05-31  Balazs Kelemen  <kbalazs@webkit.org>
 
+        [Qt] Make it possible to use WebKit2 with v8
+        https://bugs.webkit.org/show_bug.cgi?id=84457
+
+        Reviewed by NOBODY (OOPS!).
+
+        Add the necessary binding code for the parts of WebKit2 that
+        are depend deeply on the JavaScript engine. The main areas are
+        the injected bundle and plugins (the latter has been disabled
+        for Qt for the time being). I used the V8JSCAPIShim wrapping
+        where it is possible otherwise used the bindings similar how they
+        are used in WebCore. I had to do some other trivial things to make
+        WebKit2 build with v8. (Directing some JSC calls through ScriptController,
+        guarding JSC includes, etc.)
+
+        * DerivedSources.pri:
+        * PluginProcess/qt/PluginProcessMainQt.cpp:
+        (WebKit::PluginProcessMain):
+        * Shared/APIObject.cpp:
+        (WebKit::APIObject::APIObject):
+        * Shared/Plugins/NPRemoteObjectMap.h:
+        * Shared/WebSerializedScriptValue.h:
+        (WebKit::WebSerializedScriptValue::create):
+        (WebKit::WebSerializedScriptValue::adopt):
+        (WebKit::WebSerializedScriptValue::deserialize):
+        (WebKit::WebSerializedScriptValue::dataReference):
+        (WebSerializedScriptValue):
+        * Target.pri:
+        * UIProcess/API/qt/qquickwebview.cpp:
+        (QQuickWebView::platformInitialize):
+        * UIProcess/Launcher/qt/ProcessLauncherQt.cpp:
+        * UIProcess/Launcher/qt/ThreadLauncherQt.cpp:
+        (WebKit::webThreadBody):
+        * UIProcess/WebContext.cpp:
+        (WebKit::WebContext::sharedProcessContext):
+        (WebKit::WebContext::create):
+        * UIProcess/WebFrameProxy.h:
+        * WebProcess/Geolocation/GeolocationPermissionRequestManager.cpp:
+        * WebProcess/InjectedBundle/DOM/InjectedBundleNodeHandle.cpp:
+        (WebKit::InjectedBundleNodeHandle::getOrCreate):
+        * WebProcess/InjectedBundle/InjectedBundle.cpp:
+        (WebKit::InjectedBundle::garbageCollectJavaScriptObjects):
+        (WebKit::InjectedBundle::garbageCollectJavaScriptObjectsOnAlternateThreadForDebugging):
+        (WebKit::InjectedBundle::javaScriptObjectsCount):
+        (WebKit::InjectedBundle::reportException):
+        * WebProcess/InjectedBundle/InjectedBundleScriptWorld.cpp:
+        (WebKit):
+        (WebKit::InjectedBundleScriptWorld::create):
+        (WebKit::InjectedBundleScriptWorld::clearWrappers):
+        * WebProcess/Plugins/Netscape/NetscapePlugin.cpp:
+        * WebProcess/Plugins/PluginProcessConnection.cpp:
+        * WebProcess/Plugins/PluginView.cpp:
+        (WebKit::PluginView::performJavaScriptURLRequest):
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit):
+        (WebKit::WebFrameLoaderClient::didCreateScriptContext):
+        (WebKit::WebFrameLoaderClient::willReleaseScriptContext):
+        (WebKit::WebFrameLoaderClient::allowScriptExtension):
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.h:
+        (WebFrameLoaderClient):
+        * WebProcess/WebPage/FindController.cpp:
+        * WebProcess/WebPage/PageOverlay.cpp:
+        * WebProcess/WebPage/WebContextMenu.cpp:
+        * WebProcess/WebPage/WebFrame.cpp:
+        (WebKit::WebFrame::jsContext):
+        (WebKit::WebFrame::jsContextForWorld):
+        (WebKit::WebFrame::frameForContext):
+        (WebKit::WebFrame::jsWrapperForWorld):
+        (WebKit::WebFrame::computedStyleIncludingVisitedInfo):
+        (WebKit::WebFrame::counterValue):
+        (WebKit::WebFrame::markerText):
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::runJavaScriptInMainFrame):
+        * WebProcess/WebPage/qt/WebPageQt.cpp:
+        * WebProcess/WebProcess.cpp:
+        (WebKit::WebProcess::terminate):
+        (WebKit::WebProcess::didClose):
+        (WebKit):
+        (WebKit::WebProcess::getWebCoreStatistics):
+        (WebKit::WebProcess::garbageCollectJavaScriptObjects):
+        (WebKit::WebProcess::setJavaScriptGarbageCollectorTimerEnabled):
+        * WebProcess/qt/QtBuiltinBundlePage.cpp:
+        (WebKit::QtBuiltinBundlePage::didReceiveMessageToNavigatorQtObject):
+        * WebProcess/qt/QtBuiltinBundlePage.h:
+        * WebProcess/qt/WebProcessMainQt.cpp:
+        (WebKit::WebProcessMainQt):
+        * config.h:
+
+2012-05-31  Balazs Kelemen  <kbalazs@webkit.org>
+
         [Qt] Implement a shim layer to wrap v8 behind the JavaScriptCore API
         https://bugs.webkit.org/show_bug.cgi?id=87872
 

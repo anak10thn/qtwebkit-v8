@@ -18,13 +18,24 @@ WEBCORE_GENERATED_SOURCES_DIR = ../WebCore/$${GENERATED_SOURCES_DESTDIR}
 SOURCE_DIR = $${ROOT_WEBKIT_DIR}/Source
 
 WEBCORE_GENERATED_HEADERS_FOR_WEBKIT2 += \
-    $$WEBCORE_GENERATED_SOURCES_DIR/HTMLNames.h \
-    $$WEBCORE_GENERATED_SOURCES_DIR/JSCSSStyleDeclaration.h \
-    $$WEBCORE_GENERATED_SOURCES_DIR/JSDOMWindow.h \
-    $$WEBCORE_GENERATED_SOURCES_DIR/JSElement.h \
-    $$WEBCORE_GENERATED_SOURCES_DIR/JSHTMLElement.h \
-    $$WEBCORE_GENERATED_SOURCES_DIR/JSNode.h \
-    $$WEBCORE_GENERATED_SOURCES_DIR/JSRange.h \
+    $$WEBCORE_GENERATED_SOURCES_DIR/HTMLNames.h
+
+v8 {
+    WEBCORE_GENERATED_HEADERS_FOR_WEBKIT2 += \
+        $$WEBCORE_GENERATED_SOURCES_DIR/V8CSSStyleDeclaration.h \
+        $$WEBCORE_GENERATED_SOURCES_DIR/V8DOMWindow.h \
+        $$WEBCORE_GENERATED_SOURCES_DIR/V8Element.h \
+        $$WEBCORE_GENERATED_SOURCES_DIR/V8Node.h \
+        $$WEBCORE_GENERATED_SOURCES_DIR/V8Range.h
+} else {
+    WEBCORE_GENERATED_HEADERS_FOR_WEBKIT2 += \
+        $$WEBCORE_GENERATED_SOURCES_DIR/JSCSSStyleDeclaration.h \
+        $$WEBCORE_GENERATED_SOURCES_DIR/JSDOMWindow.h \
+        $$WEBCORE_GENERATED_SOURCES_DIR/JSElement.h \
+        $$WEBCORE_GENERATED_SOURCES_DIR/JSHTMLElement.h \
+        $$WEBCORE_GENERATED_SOURCES_DIR/JSNode.h \
+        $$WEBCORE_GENERATED_SOURCES_DIR/JSRange.h
+}
 
 defineReplace(message_header_generator_output) {
   FILENAME=$$basename(1)
@@ -123,6 +134,8 @@ message_receiver_generator.output_function = message_receiver_generator_output
 GENERATORS += message_receiver_generator
 
 fwheader_generator.commands = perl $${SOURCE_DIR}/WebKit2/Scripts/generate-forwarding-headers.pl $${SOURCE_DIR}/WebKit2 $${ROOT_BUILD_DIR}/Source/include qt
+v8:fwheader_generator.commands += v8
+else: fwheader_generator.commands += js JavaScriptCore/API
 fwheader_generator.depends = $${SOURCE_DIR}/WebKit2/Scripts/generate-forwarding-headers.pl
 generated_files.depends += fwheader_generator
 GENERATORS += fwheader_generator

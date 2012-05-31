@@ -35,7 +35,7 @@ SOURCES += plugin.cpp
 
 DEFINES += HAVE_WEBKIT2
 
-WEBKIT += wtf javascriptcore webkit2
+WEBKIT += wtf webkit2
 
 target.path = $$[QT_INSTALL_IMPORTS]/$${TARGET.module_name}
 

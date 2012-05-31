@@ -909,7 +909,12 @@ void PluginView::performJavaScriptURLRequest(URLRequest* request)
     if (!request->target().isNull())
         return;
 
+#if USE(JSC)
     ScriptState* scriptState = frame->script()->globalObject(pluginWorld())->globalExec();
+#elif USE(V8)
+    ScriptState* scriptState = ScriptState::forContext(frame->script()->proxy()->context(frame.get()));
+#endif
+
     String resultString;
     result.getString(scriptState, resultString);
   

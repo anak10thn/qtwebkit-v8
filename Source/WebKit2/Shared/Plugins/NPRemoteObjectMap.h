@@ -29,7 +29,7 @@
 #if ENABLE(PLUGIN_PROCESS)
 
 #include "Connection.h"
-#include <WebCore/npruntime.h>
+#include <WebCore/npruntime_internal.h>
 #include <wtf/HashMap.h>
 #include <wtf/HashSet.h>
 #include <wtf/RefCounted.h>

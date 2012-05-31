@@ -1,3 +1,13 @@
+2012-05-31  Balazs Kelemen  <kbalazs@webkit.org>
+
+        [Qt] Make it possible to use WebKit2 with v8
+        https://bugs.webkit.org/show_bug.cgi?id=84457
+
+        Reviewed by NOBODY (OOPS!).
+
+        * declarative/experimental/experimental.pri:
+        Remove the JavaScriptCore dependency. It was not needed anyway.
+
 2012-05-29  Tor Arne Vestbø  <tor.arne.vestbo@nokia.com>
 
         [Qt] Sync up favicon-implementation with WebView url changes in r118158

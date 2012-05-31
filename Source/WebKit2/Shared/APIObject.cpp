@@ -30,16 +30,16 @@
 
 #include "config.h"
 #include "APIObject.h"
-
-#include <runtime/InitializeThreading.h>
+#include <WebCore/ScriptController.h>
 #include <wtf/MainThread.h>
+
+using namespace WebCore;
 
 namespace WebKit {
 
 APIObject::APIObject()
 {
-    JSC::initializeThreading();
-    WTF::initializeMainThread();
+    ScriptController::initializeThreading();
 }
 
 } // namespace WebKit

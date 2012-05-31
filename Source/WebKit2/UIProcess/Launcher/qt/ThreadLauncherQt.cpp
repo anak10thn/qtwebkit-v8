@@ -29,7 +29,7 @@
 
 #include "WebProcess.h"
 #include <WebCore/RunLoop.h>
-#include <runtime/InitializeThreading.h>
+#include <WebCore/ScriptController.h>
 #include <wtf/MainThread.h>
 #include <wtf/Threading.h>
 
@@ -50,8 +50,7 @@ namespace WebKit {
 static void webThreadBody(void* /* context */)
 {
     // Initialization
-    JSC::initializeThreading();
-    WTF::initializeMainThread();
+    ScriptController::initializeThreading();
 
     // FIXME: We do not support threaded mode for now.
 

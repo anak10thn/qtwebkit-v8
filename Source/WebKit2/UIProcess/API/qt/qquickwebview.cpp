@@ -51,7 +51,7 @@
 #include "qwebnavigationhistory_p_p.h"
 #include "qwebpreferences_p.h"
 #include "qwebpreferences_p_p.h"
-#include <JavaScriptCore/InitializeThreading.h>
+
 #include <JavaScriptCore/JSBase.h>
 #include <JavaScriptCore/JSRetainPtr.h>
 #include <QDateTime>
@@ -62,6 +62,8 @@
 #include <WKSerializedScriptValue.h>
 #include <WebCore/IntPoint.h>
 #include <WebCore/IntRect.h>
+#include <WebCore/ScriptController.h>
+
 #include <wtf/Assertions.h>
 #include <wtf/MainThread.h>
 #include <wtf/Vector.h>
@@ -1643,8 +1645,7 @@ QQuickWebViewExperimental* QQuickWebView::experimental() const
 */
 void QQuickWebView::platformInitialize()
 {
-    JSC::initializeThreading();
-    WTF::initializeMainThread();
+    ScriptController::initializeThreading();
 }
 
 void QQuickWebView::geometryChanged(const QRectF& newGeometry, const QRectF& oldGeometry)

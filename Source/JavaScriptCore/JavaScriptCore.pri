@@ -27,9 +27,11 @@ INCLUDEPATH += \
     $$SOURCE_DIR/runtime \
     $$SOURCE_DIR/tools \
     $$SOURCE_DIR/yarr \
-    $$SOURCE_DIR/API \
-    $$SOURCE_DIR/ForwardingHeaders \
-    $$JAVASCRIPTCORE_GENERATED_SOURCES_DIR
+    $$SOURCE_DIR/API
+
+!v8: INCLUDEPATH += $$SOURCE_DIR/ForwardingHeaders
+
+INCLUDEPATH += $$JAVASCRIPTCORE_GENERATED_SOURCES_DIR
 
 win32-* {
     LIBS += -lwinmm

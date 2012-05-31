@@ -33,6 +33,7 @@
 #include <WebCore/FrameLoaderTypes.h>
 #include <wtf/Forward.h>
 #include <wtf/PassRefPtr.h>
+#include <wtf/text/CString.h>
 #include <wtf/text/WTFString.h>
 
 namespace CoreIPC {

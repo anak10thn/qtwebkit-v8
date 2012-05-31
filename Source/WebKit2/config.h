@@ -35,8 +35,11 @@
 #include <wtf/DisallowCType.h>
 #include <wtf/Platform.h>
 #include <wtf/ExportMacros.h>
+
 #if USE(JSC)
 #include <runtime/JSExportMacros.h>
+#elif USE(V8)
+#include <JavaScriptCore/runtime/JSExportMacros.h>
 #endif
 
 #ifdef __cplusplus

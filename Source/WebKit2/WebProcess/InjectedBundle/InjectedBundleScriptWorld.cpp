@@ -30,6 +30,13 @@
 #include <WebCore/ScriptController.h>
 #include <wtf/HashMap.h>
 
+#if USE(V8)
+#include <WebCore/V8Binding.h>
+#include <WebCore/V8DOMMap.h>
+#include <WebCore/V8IsolatedContext.h>
+#include <WebCore/V8Proxy.h>
+#endif
+
 using namespace WebCore;
 
 namespace WebKit {
@@ -42,9 +49,18 @@ static WorldMap& allWorlds()
     return map;
 }
 
+#if USE(V8)
+static int s_isolatedWorldID = 0;
+#endif
+
 PassRefPtr<InjectedBundleScriptWorld> InjectedBundleScriptWorld::create()
 {
+#if USE(JSC)
     return adoptRef(new InjectedBundleScriptWorld(ScriptController::createWorld()));
+#elif USE(V8)
+    V8BindingPerIsolateData::ensureInitialized(v8::Isolate::GetCurrent());
+    return adoptRef(new InjectedBundleScriptWorld(IsolatedWorld::create(s_isolatedWorldID++)));
+#endif
 }
 
 PassRefPtr<InjectedBundleScriptWorld> InjectedBundleScriptWorld::getOrCreate(DOMWrapperWorld* world)
@@ -84,7 +100,14 @@ DOMWrapperWorld* InjectedBundleScriptWorld::coreWorld() const
     
 void InjectedBundleScriptWorld::clearWrappers()
 {
+#if USE(JSC)
     m_world->clearWrappers();
+#elif USE(V8)
+    ASSERT(allWorlds().contains(m_world.get()));
+    allWorlds().remove(m_world.get());
+    m_world = IsolatedWorld::create(s_isolatedWorldID++);
+    allWorlds().add(m_world.get(), this);
+#endif
 }
 
 } // namespace WebKit

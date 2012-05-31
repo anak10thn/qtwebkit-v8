@@ -49,15 +49,24 @@
 #include <WebCore/FrameView.h>
 #include <WebCore/HTMLFrameOwnerElement.h>
 #include <WebCore/HTMLNames.h>
-#include <WebCore/JSCSSStyleDeclaration.h>
-#include <WebCore/JSElement.h>
-#include <WebCore/JSRange.h>
 #include <WebCore/Page.h>
 #include <WebCore/RenderTreeAsText.h>
 #include <WebCore/SecurityOrigin.h>
 #include <WebCore/TextIterator.h>
 #include <WebCore/TextResourceDecoder.h>
 #include <wtf/text/StringBuilder.h>
+
+#if USE(JSC)
+#include <WebCore/JSCSSStyleDeclaration.h>
+#include <WebCore/JSElement.h>
+#include <WebCore/JSRange.h>
+#elif USE(V8)
+#include <WebCore/V8CSSStyleDeclaration.h>
+#include <WebCore/V8Element.h>
+#include <WebCore/V8Node.h>
+#include <WebCore/V8Proxy.h>
+#include <WebCore/V8Range.h>
+#endif
 
 #if PLATFORM(MAC) || PLATFORM(WIN)
 #include <WebCore/LegacyWebArchive.h>
@@ -487,12 +496,22 @@ bool WebFrame::allowsFollowingLink(const WebCore::KURL& url) const
 
 JSGlobalContextRef WebFrame::jsContext()
 {
+#if USE(JSC)
     return toGlobalRef(m_coreFrame->script()->globalObject(mainThreadNormalWorld())->globalExec());
+#elif USE(V8)
+    v8::HandleScope handleScope;
+    return toGlobalRef(V8Proxy::mainWorldContext(m_coreFrame));
+#endif
 }
 
 JSGlobalContextRef WebFrame::jsContextForWorld(InjectedBundleScriptWorld* world)
 {
+#if USE(JSC)
     return toGlobalRef(m_coreFrame->script()->globalObject(world->coreWorld())->globalExec());
+#elif USE(V8)
+    v8::HandleScope handleScope;
+    return toGlobalRef(m_coreFrame->script()->proxy()->context(m_coreFrame));
+#endif
 }
 
 IntRect WebFrame::contentBounds() const
@@ -606,12 +625,19 @@ bool WebFrame::containsAnyFormElements() const
 
 WebFrame* WebFrame::frameForContext(JSContextRef context)
 {
+#if USE(JSC)
     JSObjectRef globalObjectRef = JSContextGetGlobalObject(context);
     JSC::JSObject* globalObjectObj = toJS(globalObjectRef);
     if (strcmp(globalObjectObj->classInfo()->className, "JSDOMWindowShell") != 0)
         return 0;
 
     Frame* coreFrame = static_cast<JSDOMWindowShell*>(globalObjectObj)->window()->impl()->frame();
+#elif USE(V8)
+    Frame* coreFrame = V8Proxy::retrieveFrame(toV8(context));
+    if (!coreFrame)
+        return 0;
+#endif
+
     return static_cast<WebFrameLoaderClient*>(coreFrame->loader()->client())->webFrame();
 }
 
@@ -620,11 +646,19 @@ JSValueRef WebFrame::jsWrapperForWorld(InjectedBundleNodeHandle* nodeHandle, Inj
     if (!m_coreFrame)
         return 0;
 
+#if USE(JSC)
     JSDOMWindow* globalObject = m_coreFrame->script()->globalObject(world->coreWorld());
     ExecState* exec = globalObject->globalExec();
 
     JSLock lock(SilenceAssertionsOnly);
     return toRef(exec, toJS(exec, globalObject, nodeHandle->coreNode()));
+#elif USE(V8)
+    v8::HandleScope handleScope;
+    v8::Handle<v8::Value> wrapper = toV8(nodeHandle->coreNode());
+    if (wrapper.IsEmpty())
+        return 0;
+    return toRef(wrapper);
+#endif
 }
 
 JSValueRef WebFrame::jsWrapperForWorld(InjectedBundleRangeHandle* rangeHandle, InjectedBundleScriptWorld* world)
@@ -632,11 +666,19 @@ JSValueRef WebFrame::jsWrapperForWorld(InjectedBundleRangeHandle* rangeHandle, I
     if (!m_coreFrame)
         return 0;
 
+#if USE(JSC)
     JSDOMWindow* globalObject = m_coreFrame->script()->globalObject(world->coreWorld());
     ExecState* exec = globalObject->globalExec();
 
     JSLock lock(SilenceAssertionsOnly);
     return toRef(exec, toJS(exec, globalObject, rangeHandle->coreRange()));
+#elif USE(V8)
+    v8::HandleScope handleScope;
+    v8::Handle<v8::Value> wrapper = toV8(rangeHandle->coreRange());
+    if (wrapper.IsEmpty())
+        return 0;
+    return toRef(wrapper);
+#endif
 }
 
 JSValueRef WebFrame::computedStyleIncludingVisitedInfo(JSObjectRef element)
@@ -644,6 +686,7 @@ JSValueRef WebFrame::computedStyleIncludingVisitedInfo(JSObjectRef element)
     if (!m_coreFrame)
         return 0;
 
+#if USE(JSC)
     JSDOMWindow* globalObject = m_coreFrame->script()->globalObject(mainThreadNormalWorld());
     ExecState* exec = globalObject->globalExec();
 
@@ -654,22 +697,45 @@ JSValueRef WebFrame::computedStyleIncludingVisitedInfo(JSObjectRef element)
 
     JSLock lock(SilenceAssertionsOnly);
     return toRef(exec, toJS(exec, globalObject, style.get()));
+#elif USE(V8)
+    v8::HandleScope handleScope;
+    Element* webElement = V8Element::toNative(toV8(element));
+    if (!webElement)
+        return 0;
+    v8::Handle<v8::Value> wrapper = V8CSSStyleDeclaration::wrap(CSSComputedStyleDeclaration::create(webElement, true).leakRef(), 0);
+    if (wrapper.IsEmpty())
+        return 0;
+    return toRef(wrapper);
+#endif
 }
 
 String WebFrame::counterValue(JSObjectRef element)
 {
+#if USE(JSC)
     if (!toJS(element)->inherits(&JSElement::s_info))
         return String();
 
     return counterValueForElement(static_cast<JSElement*>(toJS(element))->impl());
+#elif USE(V8)
+    Element* webElement = V8Element::toNative(toV8(element));
+    if (!webElement)
+        return String();
+    return counterValueForElement(webElement);
+#endif
 }
 
 String WebFrame::markerText(JSObjectRef element)
 {
+#if USE(JSC)
     if (!toJS(element)->inherits(&JSElement::s_info))
         return String();
-
     return markerTextForListItem(static_cast<JSElement*>(toJS(element))->impl());
+#elif USE(V8)
+    Element* webElement = V8Element::toNative(toV8(element));
+    if (!webElement)
+        return String();
+    return markerTextForListItem(webElement);
+#endif
 }
 
 String WebFrame::provisionalURL() const

@@ -51,18 +51,14 @@
 #include "WebProcessMessages.h"
 #include "WebProcessProxyMessages.h"
 #include "WebResourceCacheManager.h"
-#include <JavaScriptCore/JSLock.h>
-#include <JavaScriptCore/MemoryStatistics.h>
 #include <WebCore/AXObjectCache.h>
 #include <WebCore/ApplicationCacheStorage.h>
 #include <WebCore/CrossOriginPreflightResultCache.h>
 #include <WebCore/Font.h>
 #include <WebCore/FontCache.h>
 #include <WebCore/Frame.h>
-#include <WebCore/GCController.h>
 #include <WebCore/GlyphPageTreeNode.h>
 #include <WebCore/IconDatabase.h>
-#include <WebCore/JSDOMWindow.h>
 #include <WebCore/Language.h>
 #include <WebCore/Logging.h>
 #include <WebCore/MemoryCache.h>
@@ -79,6 +75,13 @@
 #include <wtf/HashCountedSet.h>
 #include <wtf/PassRefPtr.h>
 #include <wtf/RandomNumber.h>
+
+#if USE(JSC)
+#include <JavaScriptCore/JSLock.h>
+#include <JavaScriptCore/MemoryStatistics.h>
+#include <WebCore/GCController.h>
+#include <WebCore/JSDOMWindow.h>
+#endif
 
 #if !OS(WINDOWS)
 #include <unistd.h>
@@ -574,7 +577,7 @@ bool WebProcess::shouldTerminate()
 void WebProcess::terminate()
 {
 #ifndef NDEBUG
-    gcController().garbageCollectNow();
+    garbageCollectJavaScriptObjects();
     memoryCache()->setDisabled(true);
 #endif
 
@@ -698,7 +701,7 @@ void WebProcess::didClose(CoreIPC::Connection*)
         pages[i]->close();
     pages.clear();
 
-    gcController().garbageCollectSoon();
+    garbageCollectJavaScriptObjects();
     memoryCache()->setDisabled(true);
 #endif    
 
@@ -854,13 +857,15 @@ void WebProcess::clearPluginSiteData(const Vector<String>& pluginPaths, const Ve
     connection()->send(Messages::WebContext::DidClearPluginSiteData(callbackID), 0);
 }
 #endif
-    
+
+#if USE(JSC)
 static void fromCountedSetToHashMap(TypeCountSet* countedSet, HashMap<String, uint64_t>& map)
 {
     TypeCountSet::const_iterator end = countedSet->end();
     for (TypeCountSet::const_iterator it = countedSet->begin(); it != end; ++it)
         map.set(it->first, it->second);
 }
+#endif
 
 static void getWebCoreMemoryCacheStatistics(Vector<HashMap<String, uint64_t> >& result)
 {
@@ -917,7 +922,8 @@ static void getWebCoreMemoryCacheStatistics(Vector<HashMap<String, uint64_t> >& 
 void WebProcess::getWebCoreStatistics(uint64_t callbackID)
 {
     StatisticsData data;
-    
+
+#if USE(JSC)
     // Gather JavaScript statistics.
     {
         JSLock lock(SilenceAssertionsOnly);
@@ -936,6 +942,7 @@ void WebProcess::getWebCoreStatistics(uint64_t callbackID)
         data.statisticsNumbers.set("JavaScriptHeapSize", javaScriptHeapSize);
         data.statisticsNumbers.set("JavaScriptFreeSize", JSDOMWindow::commonJSGlobalData()->heap.capacity() - javaScriptHeapSize);
     }
+#endif
 
     WTF::FastMallocStatistics fastMallocStatistics = WTF::fastMallocStatistics();
     data.statisticsNumbers.set("FastMallocReservedVMBytes", fastMallocStatistics.reservedVMBytes);
@@ -965,12 +972,18 @@ void WebProcess::getWebCoreStatistics(uint64_t callbackID)
 
 void WebProcess::garbageCollectJavaScriptObjects()
 {
+#if USE(JSC)
     gcController().garbageCollectNow();
+#elif USE(V8)
+    v8::V8::LowMemoryNotification();
+#endif
 }
 
 void WebProcess::setJavaScriptGarbageCollectorTimerEnabled(bool flag)
 {
+#if USE(JSC)
     gcController().setJavaScriptGarbageCollectorTimerEnabled(flag);
+#endif
 }
 
 #if ENABLE(PLUGIN_PROCESS)

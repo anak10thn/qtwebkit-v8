@@ -29,7 +29,9 @@ QT = core gui widgets network declarative testlib quick quick-private webkit
 
 load(features)
 
-WEBKIT += wtf javascriptcore webkit2
+WEBKIT += wtf webkit2
+v8: WEBKIT += v8jscapishim
+else: WEBKIT += javascriptcore
 
 DEFINES += USE_SYSTEM_MALLOC=1
 

@@ -50,7 +50,6 @@
 #include "WebProcess.h"
 #include "WebProcessProxyMessages.h"
 #include <JavaScriptCore/APICast.h>
-#include <JavaScriptCore/JSObject.h>
 #include <WebCore/Chrome.h>
 #include <WebCore/DOMWrapperWorld.h>
 #include <WebCore/DocumentLoader.h>
@@ -72,6 +71,10 @@
 #include <WebCore/UIEventWithKeyState.h>
 #include <WebCore/Widget.h>
 #include <WebCore/WindowFeatures.h>
+
+#if USE(JSC)
+#include <JavaScriptCore/JSObject.h>
+#endif
 
 #if ENABLE(WEB_INTENTS)
 #include <WebCore/IntentRequest.h>
@@ -1563,5 +1566,18 @@ PassRefPtr<FrameNetworkingContext> WebFrameLoaderClient::createNetworkingContext
     RefPtr<WebFrameNetworkingContext> context = WebFrameNetworkingContext::create(m_frame);
     return context.release();
 }
+
+#if USE(V8)
+void WebFrameLoaderClient::didCreateScriptContext(v8::Handle<v8::Context>, int extensionGroup, int worldId)
+{
+}
+void WebFrameLoaderClient::willReleaseScriptContext(v8::Handle<v8::Context>, int worldId)
+{
+}
+bool WebFrameLoaderClient::allowScriptExtension(const String& extensionName, int extensionGroup, int worldId)
+{
+    return false;
+}
+#endif
 
 } // namespace WebKit

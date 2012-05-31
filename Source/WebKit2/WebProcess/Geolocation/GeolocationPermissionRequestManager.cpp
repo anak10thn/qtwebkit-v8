@@ -32,9 +32,11 @@
 #include "WebFrame.h"
 #include "WebPage.h"
 #include "WebPageProxyMessages.h"
+#include <WebCore/Document.h>
 #include <WebCore/Frame.h>
 #include <WebCore/Geolocation.h>
 #include <WebCore/SecurityOrigin.h>
+#include <wtf/text/CString.h>
 
 using namespace WebCore;
 

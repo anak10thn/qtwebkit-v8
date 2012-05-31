@@ -66,7 +66,7 @@ static JSObjectRef propertyObject(JSContextRef context, JSObjectRef object, cons
     JSValueRef value = propertyValue(context, object, propertyName);
     if (!value || !JSValueIsObject(context, value))
         return 0;
-    return const_cast<JSObjectRef>(value);
+    return jsValueAsObject(value);
 }
 
 static JSObjectRef getElementById(WKBundleFrameRef frame, JSStringRef elementId)
@@ -80,10 +80,10 @@ static JSObjectRef getElementById(WKBundleFrameRef frame, JSStringRef elementId)
         return 0;
     JSValueRef elementIdValue = JSValueMakeString(context, elementId);
     JSValueRef exception;
-    JSValueRef element = JSObjectCallAsFunction(context, const_cast<JSObjectRef>(getElementById), document, 1, &elementIdValue, &exception);
+    JSValueRef element = JSObjectCallAsFunction(context, jsValueAsObject(getElementById), document, 1, &elementIdValue, &exception);
     if (!element || !JSValueIsObject(context, element))
         return 0;
-    return const_cast<JSObjectRef>(element);
+    return jsValueAsObject(element);
 }
 
 PassRefPtr<LayoutTestController> LayoutTestController::create()
@@ -248,7 +248,7 @@ JSValueRef LayoutTestController::computedStyleIncludingVisitedInfo(JSValueRef el
     JSContextRef context = WKBundleFrameGetJavaScriptContext(mainFrame);
     if (!JSValueIsObject(context, element))
         return JSValueMakeUndefined(context);
-    JSValueRef value = WKBundleFrameGetComputedStyleIncludingVisitedInfo(mainFrame, const_cast<JSObjectRef>(element));
+    JSValueRef value = WKBundleFrameGetComputedStyleIncludingVisitedInfo(mainFrame, jsValueAsObject(element));
     if (!value)
         return JSValueMakeUndefined(context);
     return value;
@@ -260,7 +260,7 @@ JSRetainPtr<JSStringRef> LayoutTestController::counterValueForElementById(JSStri
     JSObjectRef element = getElementById(mainFrame, elementId);
     if (!element)
         return 0;
-    WKRetainPtr<WKStringRef> value(AdoptWK, WKBundleFrameCopyCounterValue(mainFrame, const_cast<JSObjectRef>(element)));
+    WKRetainPtr<WKStringRef> value(AdoptWK, WKBundleFrameCopyCounterValue(mainFrame, jsValueAsObject(element)));
     return toJS(value);
 }
 
@@ -270,7 +270,7 @@ JSRetainPtr<JSStringRef> LayoutTestController::markerTextForListItem(JSValueRef 
     JSContextRef context = WKBundleFrameGetJavaScriptContext(mainFrame);
     if (!element || !JSValueIsObject(context, element))
         return 0;
-    WKRetainPtr<WKStringRef> text(AdoptWK, WKBundleFrameCopyMarkerText(mainFrame, const_cast<JSObjectRef>(element)));
+    WKRetainPtr<WKStringRef> text(AdoptWK, WKBundleFrameCopyMarkerText(mainFrame, jsValueAsObject(element)));
     if (WKStringIsEmpty(text.get()))
         return 0;
     return toJS(text);
@@ -435,7 +435,7 @@ void LayoutTestController::setValueForUser(JSContextRef context, JSValueRef elem
     if (!element || !JSValueIsObject(context, element))
         return;
 
-    WKRetainPtr<WKBundleNodeHandleRef> nodeHandle(AdoptWK, WKBundleNodeHandleCreate(context, const_cast<JSObjectRef>(element)));
+    WKRetainPtr<WKBundleNodeHandleRef> nodeHandle(AdoptWK, WKBundleNodeHandleCreate(context, jsValueAsObject(element)));
     WKBundleNodeHandleSetHTMLInputElementValueForUser(nodeHandle.get(), toWK(value).get());
 }
 

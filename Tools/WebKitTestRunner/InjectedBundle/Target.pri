@@ -54,7 +54,9 @@ QT += declarative widgets webkit
 
 load(features)
 
-WEBKIT += wtf javascriptcore webcore
+WEBKIT += wtf webcore
+v8: WEBKIT += v8jscapishim
+else: WEBKIT += javascriptcore
 
 CONFIG += plugin rpath
 

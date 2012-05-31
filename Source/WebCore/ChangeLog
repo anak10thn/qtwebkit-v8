@@ -1,5 +1,20 @@
 2012-05-31  Balazs Kelemen  <kbalazs@webkit.org>
 
+        [Qt] Make it possible to use WebKit2 with v8
+        https://bugs.webkit.org/show_bug.cgi?id=84457
+
+        Reviewed by NOBODY (OOPS!).
+
+        * bindings/v8/V8DOMWindowShell.cpp:
+        (WebCore::V8DOMWindowShell::initContextIfNeeded): Pass a somewhat
+        reasonable value to the frame loader client. It still just hides
+        the issue of the v8 bindings not use the same abstraction for isolated
+        worlds. The InjectedBundlePageLoaderClient of WebKitTestRunner expect
+        a non-null value from here so it's really just a quick fix. The value
+        is not used in WTR btw.
+
+2012-05-31  Balazs Kelemen  <kbalazs@webkit.org>
+
         [Qt] Implement a shim layer to wrap v8 behind the JavaScriptCore API
         https://bugs.webkit.org/show_bug.cgi?id=87872
 
