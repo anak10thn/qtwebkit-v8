@@ -1,3 +1,19 @@
+2012-05-31  Balazs Kelemen  <kbalazs@webkit.org>
+
+        [Qt] Implement a shim layer to wrap v8 behind the JavaScriptCore API
+        https://bugs.webkit.org/show_bug.cgi?id=87872
+
+        Reviewed by NOBODY (OOPS!).
+
+        Teach generate-forwarding-headers to not collect the JSC headers
+        if the platform doesn't want to use JSC.
+
+        * Scripts/generate-forwarding-headers.pl:
+        (collectFameworkHeaderPaths):
+        (createForwardingHeadersForFramework):
+        Blacklist the JavaScriptCore/API path if it is not
+        allowed explicitly.
+
 2012-05-30  Caio Marcelo de Oliveira Filho  <caio.oliveira@openbossa.org>
 
         HashTable.h has using directives for std::pair and std::make_pair

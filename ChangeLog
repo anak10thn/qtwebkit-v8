@@ -1,3 +1,12 @@
+2012-05-31  Balazs Kelemen  <kbalazs@webkit.org>
+
+        [Qt] Implement a shim layer to wrap v8 behind the JavaScriptCore API
+        https://bugs.webkit.org/show_bug.cgi?id=87872
+
+        Reviewed by NOBODY (OOPS!).
+
+        * WebKit.pro: Added the new subdir to the project.
+
 2012-05-30  Mariusz Grzegorczyk  <mariusz.g@samsung.com>, Ryuan Choi  <ryuan.choi@samsung.com>
 
         [EFL][WK2] Fix WebKit2-EFL build

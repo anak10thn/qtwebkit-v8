@@ -26,6 +26,12 @@ SUBDIRS += WTF
     SUBDIRS += JavaScriptCore
 }
 
+v8 {
+    v8jscapishim.file = Source/WebCore/bindings/V8JSCAPIShim/V8JSCAPIShim.pro
+    v8jscapishim.makefile = Makefile.v8jscapishim
+    SUBDIRS += v8jscapishim
+}
+
 WebCore.file = Source/WebCore/WebCore.pro
 WebCore.makefile = Makefile.WebCore
 SUBDIRS += WebCore

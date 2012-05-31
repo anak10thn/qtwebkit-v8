@@ -15,6 +15,8 @@ CONFIG += texmap
 QT *= network sql
 haveQt(5): QT *= gui-private
 
+v8: QT += quick # for QJSEngine
+
 WEBCORE_GENERATED_SOURCES_DIR = $${ROOT_BUILD_DIR}/Source/WebCore/$${GENERATED_SOURCES_DESTDIR}
 
 INCLUDEPATH += \

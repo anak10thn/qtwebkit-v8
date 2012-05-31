@@ -1,3 +1,186 @@
+2012-05-31  Balazs Kelemen  <kbalazs@webkit.org>
+
+        [Qt] Implement a shim layer to wrap v8 behind the JavaScriptCore API
+        https://bugs.webkit.org/show_bug.cgi?id=87872
+
+        Reviewed by NOBODY (OOPS!).
+
+        Implemented a new binding layer for the JS engine named V8JSCAPIShim.
+        The goal is to be able to use V8 in WebKit2 and WebKitTestRunner
+        without forking the js binding code of the InjectedBundle.
+        The shim implements the JavaScriptCore API upon the API of v8.
+        In v8 object lifetime needs to be handled explicitly trough handles.
+        This is different from JSC where the JSObjectRef and JSValueRef pointers
+        on stack implicitly guards the cells from being GC'd. In order to fill
+        the gap between these models JSObjectRef and JSValueRef is defined as
+        smart pointers and refcounted wrappers have been added for the JavaScript
+        data types of v8.
+
+        No new tests. This will be used by WebKitTestRunner so the correctness
+        of the shim could be tested by running the layout tests.
+
+        * WebCore.pri:
+        * bindings/V8JSCAPIShim/JavaScriptCore/APICast.h: Added.
+        (V8JSCAPIShim):
+        (V8JSCAPIShim::toV8):
+        (V8JSCAPIShim::toRef):
+        (V8JSCAPIShim::jsUndefined):
+        (V8JSCAPIShim::nullValue):
+        (V8JSCAPIShim::nullObject):
+        (V8JSCAPIShim::toImpl):
+        (V8JSCAPIShim::toGlobalRef):
+        * bindings/V8JSCAPIShim/JavaScriptCore/ClassWrapper.cpp: Added.
+        (V8JSCAPIShim):
+        (V8JSCAPIShim::ClassWrapper::~ClassWrapper):
+        * bindings/V8JSCAPIShim/JavaScriptCore/ClassWrapper.h: Added.
+        (V8JSCAPIShim):
+        (ClassWrapper):
+        (V8JSCAPIShim::ClassWrapper::create):
+        (V8JSCAPIShim::ClassWrapper::parent):
+        (V8JSCAPIShim::ClassWrapper::setParent):
+        (V8JSCAPIShim::ClassWrapper::functionTemplate):
+        (V8JSCAPIShim::ClassWrapper::setFunctionTemplate):
+        (V8JSCAPIShim::ClassWrapper::takeStaticFuncPtr):
+        (V8JSCAPIShim::ClassWrapper::takeStaticValueCallback):
+        (V8JSCAPIShim::ClassWrapper::takePropertyCallback):
+        (V8JSCAPIShim::ClassWrapper::classDef):
+        (V8JSCAPIShim::ClassWrapper::ClassWrapper):
+        (V8JSCAPIShim::StaticValueCallbacks::isEmpty):
+        (StaticValueCallbacks):
+        (V8JSCAPIShim::NamedPropertyCallbacks::isEmpty):
+        (NamedPropertyCallbacks):
+        (V8JSCAPIShim::toImpl):
+        (V8JSCAPIShim::toRef):
+        * bindings/V8JSCAPIShim/JavaScriptCore/JSBase.cpp: Added.
+        (JSEvaluateScript):
+        (JSCheckScriptSyntax):
+        (JSGarbageCollect):
+        * bindings/V8JSCAPIShim/JavaScriptCore/JSBase.h: Added.
+        (V8JSCAPIShim):
+        (Wrapper):
+        (V8JSCAPIShim::Wrapper::create):
+        (V8JSCAPIShim::Wrapper::get):
+        (V8JSCAPIShim::Wrapper::isEmpty):
+        (V8JSCAPIShim::Wrapper::~Wrapper):
+        (V8JSCAPIShim::Wrapper::Wrapper):
+        (V8JSCAPIShim::::Wrapper):
+        (ObjectWrapperRefPtr):
+        (V8JSCAPIShim::ObjectWrapperRefPtr::ObjectWrapperRefPtr):
+        (V8JSCAPIShim::ObjectWrapperRefPtr::operator =):
+        (ValueWrapperRefPtr):
+        (V8JSCAPIShim::ValueWrapperRefPtr::ValueWrapperRefPtr):
+        (V8JSCAPIShim::ValueWrapperRefPtr::operator =):
+        (V8JSCAPIShim::ValueWrapperRefPtr::operator PassRefPtr<ObjectWrapper> ):
+        * bindings/V8JSCAPIShim/JavaScriptCore/JSContextRef.cpp: Added.
+        (IsolateWrapper):
+        (IsolateWrapper::create):
+        (IsolateWrapper::get):
+        (IsolateWrapper::IsolateWrapper):
+        (IsolateWrapper::~IsolateWrapper):
+        (toImpl):
+        (toRef):
+        (JSContextGroupCreate):
+        (JSContextGroupRetain):
+        (JSContextGroupRelease):
+        (JSGlobalContextCreate):
+        (JSGlobalContextCreateInGroup):
+        (JSGlobalContextRetain):
+        (JSGlobalContextRelease):
+        (JSContextGetGlobalObject):
+        * bindings/V8JSCAPIShim/JavaScriptCore/JSContextRef.h: Added.
+        * bindings/V8JSCAPIShim/JavaScriptCore/JSObjectRef.cpp: Added.
+        (V8JSCAPIShim):
+        (V8JSCAPIShim::weakReferenceDestroyerCallback):
+        (V8JSCAPIShim::staticFunctionCallThunk):
+        (V8JSCAPIShim::staticValueGetterThunk):
+        (V8JSCAPIShim::staticValueSetterThunk):
+        (V8JSCAPIShim::toV8Attributes):
+        (V8JSCAPIShim::getPropertyThunk):
+        (V8JSCAPIShim::setPropertyThunk):
+        (V8JSCAPIShim::propertyDeleterThunk):
+        (OpaqueJSPropertyNameAccumulator):
+        (V8JSCAPIShim::getPropertyNamesThunk):
+        (JSClassCreate):
+        (JSClassRetain):
+        (JSClassRelease):
+        (V8JSCAPIShim::EmbeddedObjectData::EmbeddedObjectData):
+        (EmbeddedObjectData):
+        (V8JSCAPIShim::EmbeddedObjectData::initTypeIDIfNecessary):
+        (V8JSCAPIShim::EmbeddedObjectData::isEmbeddedObjectData):
+        (JSObjectMake):
+        (V8JSCAPIShim::getClassOfObject):
+        (V8JSCAPIShim::embeddedObjectDestroyerCallback):
+        (JSObjectGetPrivate):
+        (JSObjectSetPrivate):
+        (JSPropertyNameAccumulatorAddName):
+        (JSObjectCopyPropertyNames):
+        (JSPropertyNameArrayRetain):
+        (JSPropertyNameArrayRelease):
+        (JSPropertyNameArrayGetCount):
+        (JSPropertyNameArrayGetNameAtIndex):
+        (JSObjectMakeFunctionWithCallback):
+        (JSObjectMakeArray):
+        (JSObjectGetPrototype):
+        (JSObjectGetProperty):
+        (JSObjectSetProperty):
+        (JSObjectDeleteProperty):
+        (JSObjectGetPropertyAtIndex):
+        (JSObjectSetPropertyAtIndex):
+        (JSObjectIsFunction):
+        (JSObjectCallAsFunction):
+        * bindings/V8JSCAPIShim/JavaScriptCore/JSObjectRef.h: Added.
+        * bindings/V8JSCAPIShim/JavaScriptCore/JSRetainPtr.h: Added.
+        * bindings/V8JSCAPIShim/JavaScriptCore/JSStringRef.cpp: Added.
+        (JSStringCreateWithCharacters):
+        (JSStringCreateWithUTF8CString):
+        (JSStringRetain):
+        (JSStringRelease):
+        (JSStringGetLength):
+        (JSStringGetCharactersPtr):
+        (JSStringGetMaximumUTF8CStringSize):
+        (JSStringGetUTF8CString):
+        (JSStringIsEqual):
+        (JSStringIsEqualToUTF8CString):
+        * bindings/V8JSCAPIShim/JavaScriptCore/JSStringRef.h: Added.
+        * bindings/V8JSCAPIShim/JavaScriptCore/JSValueRef.cpp: Added.
+        (JSValueGetType):
+        (JSValueIsUndefined):
+        (JSValueIsNull):
+        (JSValueIsBoolean):
+        (JSValueIsNumber):
+        (JSValueIsString):
+        (JSValueIsObject):
+        (JSValueIsObjectOfClass):
+        (JSValueIsEqual):
+        (JSValueIsStrictEqual):
+        (JSValueIsInstanceOfConstructor):
+        (JSValueMakeUndefined):
+        (JSValueMakeNull):
+        (JSValueMakeBoolean):
+        (JSValueMakeNumber):
+        (JSValueMakeString):
+        (JSValueToBoolean):
+        (JSValueToNumber):
+        (JSValueToStringCopy):
+        (JSValueToObject):
+        (JSValueProtect):
+        (JSValueUnprotect):
+        * bindings/V8JSCAPIShim/JavaScriptCore/JSValueRef.h: Added.
+        * bindings/V8JSCAPIShim/JavaScriptCore/JavaScript.h: Added.
+        * bindings/V8JSCAPIShim/JavaScriptCore/OpaqueJSString.h: Added.
+        (OpaqueJSString):
+        (OpaqueJSString::create):
+        (OpaqueJSString::characters):
+        (OpaqueJSString::length):
+        (OpaqueJSString::toV8String):
+        (OpaqueJSString::toUtf8):
+        (OpaqueJSString::OpaqueJSString):
+        (OpaqueJSString::~OpaqueJSString):
+        * bindings/V8JSCAPIShim/JavaScriptCore/V8JSCAPIShimMacros.h: Added.
+        * bindings/V8JSCAPIShim/JavaScriptCore/WebKitAvailability.h: Added.
+        * bindings/V8JSCAPIShim/V8JSCAPIShim.pri: Added.
+        * bindings/V8JSCAPIShim/V8JSCAPIShim.pro: Added.
+
 2012-05-30  Caio Marcelo de Oliveira Filho  <caio.oliveira@openbossa.org>
 
         HashTable.h has using directives for std::pair and std::make_pair

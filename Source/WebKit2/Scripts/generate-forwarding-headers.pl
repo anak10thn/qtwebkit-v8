@@ -35,20 +35,25 @@ use File::Spec::Functions;
 
 my $srcRoot = realpath(File::Spec->catfile(dirname(abs_path($0)), "../.."));
 my $incFromRoot = abs_path($ARGV[0]);
-my @platformPrefixes = ("blackberry", "cf", "chromium", "curl", "efl", "gtk", "mac", "qt", "soup", "v8", "win", "wx");
+my @platformPrefixes = ("blackberry", "cf", "chromium", "curl", "efl", "gtk", "mac", "qt", "soup",
+                        "js", "v8", "win", "wx", "JavaScriptCore/API");
 my @frameworks = ( "JavaScriptCore", "WebCore", "WebKit2");
 my @skippedPrefixes;
 my @frameworkHeaders;
 my $framework;
 my %neededHeaders;
+my @platforms;
 
 shift;
 my $outputDirectory = $ARGV[0];
 shift;
-my $platform  = $ARGV[0];
+while (@ARGV) {
+    push(@platforms, $ARGV[0]);
+    shift;
+}
 
 foreach my $prefix (@platformPrefixes) {
-    push(@skippedPrefixes, $prefix) unless ($prefix =~ $platform);
+    push(@skippedPrefixes, $prefix) unless $prefix ~~ @platforms;
 }
 
 foreach (@frameworks) {
@@ -80,7 +85,9 @@ sub collectFameworkHeaderPaths {
     my $file = $_;
     if ($filePath =~ '\.h$' && $filePath !~ "ForwardingHeaders" && grep{$file eq $_} keys %neededHeaders) {
         my $headerPath = substr($filePath, length(File::Spec->catfile($srcRoot, $framework)) + 1 );
-        push(@frameworkHeaders, $headerPath) unless (grep($headerPath =~ "$_/", @skippedPrefixes) || $headerPath =~ "config.h");
+        push(@frameworkHeaders, $headerPath) unless (grep($headerPath =~ "$_/", @skippedPrefixes)
+                                                     || grep("$framework/$headerPath" =~ "$_/", @skippedPrefixes)
+                                                     || $headerPath =~ "config.h");
     }
 }
 
@@ -90,8 +97,17 @@ sub createForwardingHeadersForFramework {
     foreach my $header (@frameworkHeaders) {
         my $headerName = basename($header);
 
-        # If we found more headers with the same name, only generate a forwarding header for the current platform
-        if(grep($_ =~ "/$headerName\$", @frameworkHeaders) == 1 || $header =~ "/$platform/" ) {
+        # If we found more headers with the same name, only generate a forwarding header
+        # if it has a matching platform prefix.
+        my $isMatchingPlatform = 0;
+        foreach my $platform (@platforms) {
+            if ($header =~ "/$platform/") {
+                $isMatchingPlatform = 1;
+            }
+        }
+
+        my $numMatches = scalar(grep($_ =~ "/$headerName\$", @frameworkHeaders));
+        if ($numMatches == 1 || ($numMatches > 0 && $isMatchingPlatform)) {
             my $forwardingHeaderPath = File::Spec->catfile($targetDirectory, $headerName);
             my $expectedIncludeStatement = "#include \"$framework/$header\"";
             my $foundIncludeStatement = 0;
